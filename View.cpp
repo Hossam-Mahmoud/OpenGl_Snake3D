@@ -49,6 +49,8 @@ vec4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
 vec4 material_specular( 1.0, 0.0, 1.0, 1.0 );
 GLfloat  material_shininess = 200.0;
 
+
+
 int index =0;
 void triangle( const vec4& a, const vec4& b, const vec4& c )
 {
@@ -189,7 +191,8 @@ void
 reshape( int width, int height )
 {
 
-
+	WINDOW_HEIGHT = height;
+	WINDOW_WIDTH = width;
     proj_left = -5.0; proj_right = 5.0;
     proj_top = 5.0; proj_bottom = -5.0;
     proj_znear= -20.0, proj_zfar = 20.0;
