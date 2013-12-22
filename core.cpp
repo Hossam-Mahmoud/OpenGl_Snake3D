@@ -16,9 +16,17 @@ void Map::initialize() {
 	score = 0;
 	dead = false;
 	current_score = 0;
+	error = false;
+	foodEaten = 0;
 
-	snake = vector<int> ();
+	snake = queue<int> ();
+	special_timer = -1;
+	special_exist = false;
+	special_x = 0;
+	special_y = 0;
 	generate_map();
+	if (!error)
+		addFood();
 }
 int* Map::decrypt(int index) {
 
@@ -78,14 +86,15 @@ void Map::generate_map() {
 
 	//Assuming that the initial size is 3
 	//TODO
-	snake.push_back(encrypt(tail_x, tail_y));
-	snake.push_back(encrypt(body_x, body_y));
-	snake.push_back(encrypt(head_x, head_y));
+	snake.push(encrypt(tail_x, tail_y));
+	snake.push(encrypt(body_x, body_y));
+	snake.push(encrypt(head_x, head_y));
 
 	//check up
 	check(head_x, head_y, true);
 }
 void Map::check(int head_x, int head_y, bool change) {
+	current_direction = UP;
 	if (head_x - 1 >= 0 && free(grid[head_x - 1][head_y])) {
 		if (change)
 			current_direction = UP;
@@ -147,6 +156,87 @@ void Map::move(int direction) {
 		break;
 	}
 }
+void Map::update() {
+	//TODO
+	// first check if the next step is valid
+	int* head = decrypt(snake.back());
+	int head_x = head[0];
+	int head_y = head[1];
+	bool grow = false;
+
+	if (free(
+			grid[head_x + delta_x[current_direction]][head_y
+					+ delta_y[current_direction]])) {
+		int type = grid[head_x + delta_x[current_direction]][head_y
+				+ delta_y[current_direction]];
+		if (isFood(type)) {
+			grow = true;
+			score += foodScore(type);
+			current_score += foodScore(type);
+			if (type == SPECIAL) {
+				special_exist = false;
+				special_timer = -1;
+			} else {
+				foodEaten++;
+				if (foodEaten == SPECIAL_CONDITION && !special_exist) {
+					addSpecial();
+					foodEaten = 0;
+				}
+			}
+			grid[head_x + delta_x[current_direction]][head_y
+					+ delta_y[current_direction]] = EMPTY;
+
+			addFood();
+			//Special Condition to add Special Food
+		}
+		if (special_exist) {
+			special_timer--;
+			if (special_timer == 0) {
+				special_exist = false;
+				special_timer = -1;
+				grid[special_x][special_y] = EMPTY;
+				special_x = -1;
+				special_y = -1;
+			}
+		}
+		//TODO
+		/*Actions taken when the snake eats.
+		 * */
+	} else {
+		dead = true;
+		return;
+	}
+	// First check if we need to add another part to the snake or not
+	int temp = snake.front();//Remove the tail
+	if (!grow)
+		snake.pop();
+	head = decrypt(temp);
+	grid[head[0]][head[1]] = EMPTY;
+	temp = snake.back();//old head
+	head = decrypt(temp);
+	grid[head[0]][head[1]] = Snake_Body;
+	// now head contains the new position of head
+	head[0] = head_x + delta_x[current_direction];
+	head[1] = head_y + delta_y[current_direction];
+	head_x = head[0];
+	head_y = head[1];
+	grid[head[0]][head[1]] = Snake_Head;
+	temp = encrypt(head[0], head[1]);
+	snake.push(temp);
+	temp = snake.front();//Remove the tail
+	head = decrypt(temp);
+	grid[head[0]][head[1]] = Snake_Tail;
+	// now check if the next move in any direction/Current Direction is food/special
+	for (temp = 0; temp < 4; temp++) {
+		if (isFood(grid[head_x + delta_x[temp]][head_y + delta_y[temp]])) {
+			temp = 5;
+			eating = true;
+		}
+	}
+	if (temp == 4)
+		eating = false;
+}
+
 void Map::readFile() {
 	ifstream file;
 	char* fileName = new char[files[level - 1].length() + 1];
@@ -185,9 +275,12 @@ void Map::readFile() {
 				int value = (int) line[2 * i] - (int) '0';
 				if (value < 0 || value > max_value) {
 					error_msg += "Error in File Format , Line (row) ";
-					error_msg += row;
+					error_msg += row + (int) '0';
 					error_msg += " slot ";
-					error_msg += (2 * i);
+					error_msg += (2 * i) + (int) '0';
+					error_msg += "|";
+					error_msg += line[2 * i];
+					error_msg += "|";
 					error_msg += " is incompatible.";
 					cout << error_msg << endl;
 					error = true;
@@ -225,6 +318,16 @@ void Map::readFile() {
 void Map::printArray() {
 	cout << separator_line << endl;
 	cout << "GRID" << endl;
+	if (dead)
+		cout << "Snake is Dead" << endl;
+	else
+		cout << "Snake is Alive" << endl;
+
+	if (eating)
+		cout << "Snake is about to eat" << endl;
+	else
+		cout << "No near food " << endl;
+	cout << endl << endl;
 	for (int i = 0; i < Length; i++) {
 		cout << grid[i][0];
 		for (int j = 1; j < Width; j++) {
@@ -245,12 +348,53 @@ bool Map::levelUp() {
 
 void Map::addFood() {
 	//TODO
+
+	int* food = foodPosition();
+
+	if (food[0] != -1) {
+		grid[food[0]][food[1]] = FOOD;
+	}
+
 }
 void Map::addSpecial() {
+	if (!special_exist) {
+		int* food = foodPosition();
+		if (food[0] != -1) {
+			grid[food[0]][food[1]] = SPECIAL;
+			special_exist = true;
+			special_x = food[0];
+			special_y = food[1];
+			special_timer = SPECIAL_TIMER;
+		}
+	}
 	//TODO
 }
+
+int* Map::foodPosition() {
+	int* head = decrypt(snake.back());
+	int* food = new int[2];
+	food[0] = -1;
+	food[1] = -1;
+
+	double max_distance = -1;
+
+	for (int i = 0; i < Length; i++) {
+		for (int j = 0; j < Width; j++) {
+			if (grid[i][j] == EMPTY) {
+				double distance = getDistance(head, i, j);
+				if (distance > max_distance) {
+					max_distance = distance;
+					food[0] = i;
+					food[1] = j;
+				}
+			}
+		}
+	}
+	return food;
+}
+
 /*
- int main(int argc, char **argv) {
+ Methods to use
  Map myMap;
  myMap.initialize(); // Initialize the game
  int direction = Periodic;//Possible directions {Left,Right,Up,Down,Periodic==CurrentDirection}
@@ -269,3 +413,52 @@ void Map::addSpecial() {
  return 0;
  }
  */
+//int main(int argc, char **argv) {
+//	Map e;
+//	e.initialize();
+//
+//	cout << tab << "Core Test " << endl;
+//	cout << separator_line << endl;
+//	cout << "Instructions : " << endl;
+//	cout << tab << "Update : 1" << endl;
+//	cout << tab << "Move   : 2" << endl;
+//	cout << tab << "Print  : 3" << endl;
+//	cout << tab << "Exit   : 4" << endl;
+//
+//	int input;
+//	cin >> input;
+//
+//	while (input != 4) {
+//		switch (input) {
+//		case 1:
+//			e.update();
+//			break;
+//		case 2:
+//			cout << tab << tab << "Enter Direction" << endl;
+//			cin >> input;
+//			e.move(input);
+//			break;
+//		case 3:
+//			e.printArray();
+//			break;
+//		case 4:
+//			e.printArray();
+//			return 0;
+//			break;
+//		default:
+//			break;
+//		}
+//
+//		cout << separator_line << endl;
+//		cout << tab << "Core Test " << endl;
+//		cout << separator_line << endl;
+//		cout << "Instructions : " << endl;
+//		cout << tab << "Update : 1" << endl;
+//		cout << tab << "Move   : 2" << endl;
+//		cout << tab << "Print  : 3" << endl;
+//		cout << tab << "Exit   : 4" << endl;
+//		cin >> input;
+//	}
+//
+//	return 0;
+//}

@@ -9,9 +9,9 @@
 #define CORE_H_
 #include <stdio.h>
 #include <iostream>
-#include <vector>
 #include <fstream>
 #include <string.h>
+#include <queue>
 
 using namespace std;
 #define  EMPTY 0 // Empty cells
@@ -22,30 +22,42 @@ using namespace std;
 #define Snake_Tail 6 // Snake tail Cell
 #define Snake_Body 5 // Snake Body Cells
 #define max_value 6 // Implementation details
-#define Length 3 // Length of the grid
-#define Width 3 // Width of the grid
+#define Length 6 // Length of the grid
+#define Width 6 // Width of the grid
 #define Max_Level 3
-#define Left 1 // Left Direction
-#define Right 2 //Right Direction
-#define Periodic 3 // Move in the current direction
-#define UP 4 //Up direction
-#define DOWN 5 //Down direction
+#define Left 0 // Left Direction
+#define Right 1 //Right Direction
+#define UP 2 //Up direction
+#define DOWN 3 //Down direction
+#define Periodic 4 // Move in the current direction
 #define MIN_SIZE 3 //Implementation Details (initial Length of the Snake)
+#define FOOD_SCORE 10
+#define SPECIAL_SCORE 100
+#define SPECIAL_TIMER 10
+#define SPECIAL_CONDITION 5
+
 string separator_line =
 		"********************************************************";
+string tab = "	";
 string files[] = { "level1.txt", "level2.txt", "level3.txt" };
+int delta_x[] = { 0, 0, -1, 1 };
+int delta_y[] = { -1, 1, 0, 0 };
 /************************Struct Map ****************************/
 struct Map {
 	int level;//Current Level -->1,2,...,Max_Level
 	int grid[Length][Width];
 	int score;//Total Score
+	int foodEaten ;
 	bool dead;
 	int current_score;//Current Score in the current level , or just use score !!
-	vector<int> snake;//Used to store the snake cells , for movement
+	queue<int> snake;//Used to store the snake cells , for movement
 	bool error;
 	int snake_head;// int value of the snake_head position
 	int current_direction;
 	bool eating;
+	double special_timer;
+	int special_x, special_y;
+	bool special_exist;
 
 	string error_msg;
 
@@ -61,12 +73,34 @@ struct Map {
 	void printArray();
 	bool levelUp();
 	bool free(int type) {
-		if (type == WALL || type == FOOD || type == EMPTY || type == SPECIAL)
-			return true;
-		return false;
+		if (type == WALL || type == Snake_Body || type == Snake_Tail)
+			return false;
+		return true;
 	}
 
 	void addFood();//Add normal food , normal food stays in the grid till the snake eats it , when to add the normal food!!
 	void addSpecial();//Add special food , special food stays in the grid for certain time (??) , when to add the special food !!!
+	void update();
+	int* foodPosition();
+	bool isFood(int type) {
+		if (type == FOOD || type == SPECIAL)
+			return true;
+		return false;
+	}
+	int foodScore(int type) {
+		if (type == FOOD)
+			return FOOD_SCORE;
+		//Special Food Score depends on time
+		//TODO
+		if (type == SPECIAL)
+			return SPECIAL_SCORE * (special_timer );
+		return 0;
+	}
+	double getDistance(int* head, int food_x, int food_y) {
+		//TODO
+		double s_dist = ((head[0] - food_x) * (head[0] - food_x)) + ((head[1]
+				- food_y) * (head[1] - food_y));
+		return s_dist;
+	}
 };
 #endif /* CORE_H_ */
