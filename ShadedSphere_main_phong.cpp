@@ -7,7 +7,7 @@
 
 #include "Angel.h"
 #include "core.h"
-
+#include <vector>
 Map map;
 int WINDOW_WIDTH = 512;
 int WINDOW_HEIGHT = 512;
@@ -16,6 +16,8 @@ int direction;
 const int NumTimesToSubdivide = 5;
 const int NumTriangles = 4096 + 2;  // (4 faces)^(NumTimesToSubdivide + 1)
 const int NumVertices = 3 * NumTriangles;
+
+int animispeed = 5;
 
 vec4 points[NumVertices];
 vec3 normals[NumVertices];
@@ -34,9 +36,14 @@ GLfloat proj_left, proj_right, proj_top, proj_bottom, proj_znear = 1, proj_zfar 
 mat4 trans_matrix;
 GLfloat theta = 0;
 
+vector<GLfloat> dx;
+vector<GLfloat> dy;
+
+GLfloat trans;
+
 //light parameters
 vec4 light_position(6, 6, 6, 0.0);
-vec4 light_ambient(0.2, 0.2, 0.2, 1.0);
+vec4 light_ambient(0, 0, 0, 1.0);
 vec4 light_diffuse(1.0, 1.0, 1.0, 1.0);
 vec4 light_specular(1.0, 1.0, 1.0, 1.0);
 
@@ -100,18 +107,75 @@ void tetrahedron(int count) {
 	divide_triangle(v[0], v[3], v[1], count);
 	divide_triangle(v[0], v[2], v[3], count);
 }
+void step(int);
+
+void animate(int val)
+{
+if(trans>=sphere_width)
+{
+	glutPostRedisplay();
+	trans = 0;
+	step(1);
+}
+else
+{
+
+//	std::cout<<trans<<std::endl;
+	trans +=0.01;
+	glutPostRedisplay();
+	glutTimerFunc(animispeed, animate, 1);
+}
+
+}
 void step(int integer) {
 	if (integer != 0) {
 		map.move(direction);
 		map.update();
+
 	}
+
+	int size = map.snake_old.size();
+	int j = map.snake.size()-size;
+
+
+	list<int>::iterator iter;
+	list<int>::iterator iter2;
+	iter2 = map.snake.begin();
+	if(j>0)
+		iter2++;
+
+
+	dx.clear();
+	dy.clear();
+
+	int* oldcord;
+	int* newcord;
+	for(iter=map.snake_old.begin();iter!=map.snake_old.end();iter++)
+	{
+		oldcord = map.decrypt(*iter);
+		newcord = map.decrypt(*iter2);
+
+//		std::cout<<newcord[0]<<std::endl;
+//		std::cout<<newcord[1]<<std::endl;
+		dx.push_back(newcord[0]-oldcord[0]);
+		dy.push_back(newcord[1]-oldcord[1]);
+
+
+		iter2++;
+	}
+
 	direction = Periodic;
 	//map.printArray();
 
+
+	trans = 0;
 	glutPostRedisplay();
-	glutTimerFunc(1000, step, 1);
+	glutTimerFunc(animispeed, animate, 1);
 
 }
+
+
+
 void init() {
 
 	map.initialize();
@@ -243,24 +307,43 @@ void display(void) {
 //				specular_product);
 //		glUniform1f(glGetUniformLocation(program, "Shininess"), material_shininess);
 
-	for (int i = -Length / 2; i < Length / 2; i++)
-		for (int j = -Width / 2; j < Width / 2; j++)
-		{
-			if (map.snake_body(i + Length / 2, j + Width / 2)) {
 
-				material_diffuse = vec4(1,0,0,1);
+
+
+		list<int>::iterator iter;
+
+		int* oldcord;
+		int k = 0;
+		for(iter=map.snake_old.begin();iter!=map.snake_old.end();iter++)
+		{
+			oldcord = map.decrypt(*iter);
+			int i = (oldcord[0]-Length/2),j = (oldcord[1]-Width/2);
+
+			material_diffuse = vec4(1,0,0,1);
 									 diffuse_product = light_diffuse * material_diffuse;
 									glUniform4fv(glGetUniformLocation(program, "DiffuseProduct"), 1,
 											diffuse_product);
-				glUniformMatrix4fv(model_loc, 1, GL_TRUE,
-						Translate(i * sphere_width + sphere_width / 2,
-								sphere_width / 2,
-								j * sphere_width + sphere_width / 2));
-				glDrawArrays(GL_TRIANGLES, 2 * 3, NumVertices - 6);
+			glUniformMatrix4fv(model_loc, 1, GL_TRUE,
+									Translate(i * sphere_width + sphere_width / 2 + (dx[k]*trans),
+											sphere_width / 2,
+											j * sphere_width + sphere_width / 2 + (dy[k]*trans)));
+							glDrawArrays(GL_TRIANGLES, 2 * 3, NumVertices - 6);
+					k++;
+		}
 
-			}
-			else if(map.isFood(i + Length / 2, j + Width / 2))
+
+
+
+	for (int i = -Length / 2; i < Length / 2; i++)
+		for (int j = -Width / 2; j < Width / 2; j++)
+		{
+			if(map.isFood(i + Length / 2, j + Width / 2))
 			{
+				if(map.isSpecial(i + Length / 2, j + Width / 2))
+				{
+					material_diffuse = vec4(0,0,0,1);
+				}
+				else
 					material_diffuse = vec4(0,1,1,1);
 						 diffuse_product = light_diffuse * material_diffuse;
 						glUniform4fv(glGetUniformLocation(program, "DiffuseProduct"), 1,

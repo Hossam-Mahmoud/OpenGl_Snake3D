@@ -11,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 #include <string.h>
-#include <queue>
+#include <list>
 
 using namespace std;
 #define  EMPTY 0 // Empty cells
@@ -41,15 +41,15 @@ using namespace std;
 /************************Struct Map ****************************/
 class Map {
 public:
-	int level; //Current Level -->1,2,...,Max_Level
+	int level;//Current Level -->1,2,...,Max_Level
 	int grid[Length][Width];
-	int score; //Total Score
+	int score;//Total Score
 	int foodEaten;
 	bool dead;
-	int current_score; //Current Score in the current level , or just use score !!
-	queue<int> snake; //Used to store the snake cells , for movement
+	int current_score;//Current Score in the current level , or just use score !!
+	list<int> snake, snake_old;//Used to store the snake cells , for movement
 	bool error;
-	int snake_head; // int value of the snake_head position
+	int snake_head;// int value of the snake_head position
 	int current_direction;
 	bool eating;
 	double special_timer;
@@ -58,12 +58,12 @@ public:
 
 	string error_msg;
 
-	void initialize(); //Initialize the game
-	int* decrypt(int index); //Convert the 1 int description of a cell to x & y assuming that length > width
-	int encrypt(int x, int y); //convert X,Y of a cell to 1 int value , assuming length>width
+	void initialize();//Initialize the game
+	int* decrypt(int index);//Convert the 1 int description of a cell to x & y assuming that length > width
+	int encrypt(int x, int y);//convert X,Y of a cell to 1 int value , assuming length>width
 	void check(int head_x, int head_y, bool check); // Check if cell [head_x][head_y] is has empty slot beside it , if there is no empty slots then the snake dies
 
-	void generate_map(); //Read the map from the file
+	void generate_map();//Read the map from the file
 	bool isDead();
 	void move(int direction);
 	void readFile();
@@ -74,13 +74,9 @@ public:
 			return false;
 		return true;
 	}
-	bool snake_body(int i, int j) {
-		int type = grid[i][j];
-		return type == Snake_Head || type == Snake_Tail || type == Snake_Body;
-	}
 
-	void addFood(); //Add normal food , normal food stays in the grid till the snake eats it , when to add the normal food!!
-	void addSpecial(); //Add special food , special food stays in the grid for certain time (??) , when to add the special food !!!
+	void addFood();//Add normal food , normal food stays in the grid till the snake eats it , when to add the normal food!!
+	void addSpecial();//Add special food , special food stays in the grid for certain time (??) , when to add the special food !!!
 	void update();
 	int* foodPosition();
 	bool isFood(int type) {
@@ -91,6 +87,12 @@ public:
 	bool isFood(int i, int j) {
 		return isFood(grid[i][j]);
 	}
+
+	bool isSpecial(int i, int j)
+	{
+		return grid[i][j]==SPECIAL;
+	}
+
 	int foodScore(int type) {
 		if (type == FOOD)
 			return FOOD_SCORE;
@@ -102,9 +104,18 @@ public:
 	}
 	double getDistance(int* head, int food_x, int food_y) {
 		//TODO
-		double s_dist = ((head[0] - food_x) * (head[0] - food_x))
-				+ ((head[1] - food_y) * (head[1] - food_y));
+		double s_dist = ((head[0] - food_x) * (head[0] - food_x)) + ((head[1]
+				- food_y) * (head[1] - food_y));
 		return s_dist;
+	}
+	void update_Old_List();
+	void print_List(list<int> current) {
+		list<int>::iterator iter;
+		for (iter = current.begin(); iter != current.end(); iter++) {
+			int* value = decrypt(*iter);
+			cout << "( " << value[0] << " , " << value[1] << " ) ";
+		}
+		cout << endl;
 	}
 };
 #endif /* CORE_H_ */
