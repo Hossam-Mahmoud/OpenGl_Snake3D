@@ -24,12 +24,11 @@ GLuint model_loc, camera_loc, projection_loc, lightPos_loc;
 GLuint vNormal;
 GLuint program;
 //camera parameters
-vec4 cam_eye;
-vec4 cam_upvec;
-vec4 cam_COF;
-
+vec4 cam_eye = vec4(30.0, 10.0, -1, 1.0);
+vec4 cam_upvec = vec4(0.0, 1.0, 0.0, 0.0);
+vec4 cam_COF = vec4(0.0, 0.0, 0.0, 1.0);
 //projection parameters
-GLfloat proj_left, proj_right, proj_top, proj_bottom, proj_znear, proj_zfar;
+GLfloat proj_left, proj_right, proj_top, proj_bottom, proj_znear = 1, proj_zfar = 100;
 
 //transformation
 mat4 trans_matrix;
@@ -107,7 +106,7 @@ void step(int integer) {
 		map.update();
 	}
 	direction = Periodic;
-	map.printArray();
+	//map.printArray();
 
 	glutPostRedisplay();
 	glutTimerFunc(1000, step, 1);
@@ -200,13 +199,10 @@ void init() {
 
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	cam_COF = vec4(0.0, 0.0, 0.0, 1.0);
-	cam_eye = vec4(20.0, 20.0, 20.0, 1.0);
-	cam_upvec = vec4(0.0, 1.0, 0.0, 0.0);
+
 
 	mat4 camera = LookAt(cam_eye, cam_COF, cam_upvec);
 	glUniformMatrix4fv(camera_loc, 1, GL_TRUE, camera);
-
 	glUniformMatrix4fv(model_loc, 1, GL_TRUE, mat4(1));
 
 	material_diffuse = vec4(1,1,1,1);
@@ -277,22 +273,6 @@ void display(void) {
 
 			}
 		}
-//    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
-//
-//    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,sphere_width*2));
-//    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
-//
-//    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,sphere_width*3));
-//    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
-//
-//    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,-sphere_width));
-//    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
-//
-//    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(-sphere_width,0,0));
-//    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
-//
-//    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(sphere_width,0,0));
-//    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
 
 	glutSwapBuffers();
 }
@@ -313,26 +293,11 @@ void reshape(int width, int height) {
 
 	WINDOW_HEIGHT = height;
 	WINDOW_WIDTH = width;
-	proj_left = -5.0;
-	proj_right = 5.0;
-	proj_top = 5.0;
-	proj_bottom = -5.0;
-	proj_znear = -20.0, proj_zfar = 20.0;
-
-	GLfloat aspect = GLfloat(width) / height;
-
-	if (aspect > 1.0) {
-		proj_left *= aspect;
-		proj_right *= aspect;
-	} else {
-		proj_top /= aspect;
-		proj_bottom /= aspect;
-	}
 
 //	mat4 projection = Ortho(proj_left, proj_right, proj_bottom, proj_top,
 //			proj_znear, proj_zfar);
 	mat4 projection = Perspective(45.0f, 1.0f * WINDOW_WIDTH / WINDOW_HEIGHT,
-			1.0f, 100.0f);
+			proj_znear, proj_zfar);
 
 	glUniformMatrix4fv(projection_loc, 1, GL_TRUE, projection);
 
