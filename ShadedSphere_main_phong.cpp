@@ -209,16 +209,16 @@ void display(void) {
 
 	glUniformMatrix4fv(model_loc, 1, GL_TRUE, mat4(1));
 
-//	material_diffuse = vec4(1,1,1,1);
+	material_diffuse = vec4(1,1,1,1);
 //
 //	vec4 ambient_product = light_ambient * material_ambient;
-//	vec4 diffuse_product = light_diffuse * material_diffuse;
+	vec4 diffuse_product = light_diffuse * material_diffuse;
 //	vec4 specular_product = light_specular * material_specular;
 //
 //	glUniform4fv(glGetUniformLocation(program, "AmbientProduct"), 1,
 //			ambient_product);
-//	glUniform4fv(glGetUniformLocation(program, "DiffuseProduct"), 1,
-//			diffuse_product);
+	glUniform4fv(glGetUniformLocation(program, "DiffuseProduct"), 1,
+			diffuse_product);
 //	glUniform4fv(glGetUniformLocation(program, "SpecularProduct"), 1,
 //			specular_product);
 
@@ -249,7 +249,13 @@ void display(void) {
 
 	for (int i = -Length / 2; i < Length / 2; i++)
 		for (int j = -Width / 2; j < Width / 2; j++)
+		{
 			if (map.snake_body(i + Length / 2, j + Width / 2)) {
+
+				material_diffuse = vec4(1,0,0,1);
+									 diffuse_product = light_diffuse * material_diffuse;
+									glUniform4fv(glGetUniformLocation(program, "DiffuseProduct"), 1,
+											diffuse_product);
 				glUniformMatrix4fv(model_loc, 1, GL_TRUE,
 						Translate(i * sphere_width + sphere_width / 2,
 								sphere_width / 2,
@@ -257,6 +263,20 @@ void display(void) {
 				glDrawArrays(GL_TRIANGLES, 2 * 3, NumVertices - 6);
 
 			}
+			else if(map.isFood(i + Length / 2, j + Width / 2))
+			{
+					material_diffuse = vec4(0,1,1,1);
+						 diffuse_product = light_diffuse * material_diffuse;
+						glUniform4fv(glGetUniformLocation(program, "DiffuseProduct"), 1,
+								diffuse_product);
+				glUniformMatrix4fv(model_loc, 1, GL_TRUE,
+						Translate(i * sphere_width + sphere_width / 2,
+								sphere_width / 2,
+								j * sphere_width + sphere_width / 2));
+				glDrawArrays(GL_TRIANGLES, 2 * 3, NumVertices - 6);
+
+			}
+		}
 //    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
 //
 //    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,sphere_width*2));
