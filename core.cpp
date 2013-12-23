@@ -22,7 +22,7 @@ void Map::initialize() {
 	//Initialize the Game
 	// set level to 1
 
-	level = 2;
+	level = 1;
 
 	score = 0;
 	dead = false;
