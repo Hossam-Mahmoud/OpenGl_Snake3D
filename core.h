@@ -22,8 +22,8 @@ using namespace std;
 #define Snake_Tail 6 // Snake tail Cell
 #define Snake_Body 5 // Snake Body Cells
 #define max_value 6 // Implementation details
-#define Length 10 // Length of the grid
-#define Width 10 // Width of the grid
+#define Length 19 // Length of the grid
+#define Width 20 // Width of the grid
 #define Max_Level 3
 #define Left 0 // Left Direction
 #define Right 1 //Right Direction

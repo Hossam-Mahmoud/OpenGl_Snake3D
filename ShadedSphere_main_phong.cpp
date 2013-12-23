@@ -26,12 +26,13 @@ GLuint model_loc, camera_loc, projection_loc, lightPos_loc;
 GLuint vNormal;
 GLuint program;
 //camera parameters
-vec4 cam_eye = vec4(15.0, 10.0, -1, 1.0);
+vec4 cam_eye = vec4(0, 0, 0, 1.0);
 vec4 cam_upvec = vec4(0.0, 1.0, 0.0, 0.0);
-vec4 cam_COF = vec4(0.0, 0.0, -1, 1.0);
+vec4 cam_COF = vec4(0.0, 0.0, 0, 1.0);
 int cam_move_index = 0;
 mat4 cam_moves[4];
 GLfloat cam_rotate = 0;
+mat4 num_trans;
 //projection parameters
 GLfloat proj_left, proj_right, proj_top, proj_bottom, proj_znear = 1, proj_zfar = 100;
 
@@ -120,8 +121,18 @@ void animate(int val)
 		trans = 0;
 		if(cam_rotate != 0)
 		{
-			cam_COF = RotateY(cam_rotate) * cam_COF;
-			cam_eye = RotateY(cam_rotate) * cam_eye;
+			if(cam_rotate < 0)
+				cam_move_index = (cam_move_index+1)%4;
+			else
+			{
+				if(cam_move_index == 0)
+					cam_move_index = 4;
+				cam_move_index = (cam_move_index-1)%4;
+
+			}
+			int* arr = map.decrypt(Snake_Tail);
+			//cam_COF = RotateY(cam_rotate) * cam_COF;
+			//cam_eye = RotateY(cam_rotate) * cam_eye;
 			cam_rotate = 0;
 		}
 		step(1);
@@ -192,11 +203,17 @@ void step(int integer) {
 
 void init() {
 
+
+	map.initialize();
 	cam_moves[0] = Translate(-0.01, 0, 0);
 	cam_moves[1] = Translate(0, 0, -0.01);
 	cam_moves[2] = Translate(0.01, 0, 0);
 	cam_moves[3] = Translate(0, 0, 0.01);
-	map.initialize();
+	int* arr = map.decrypt(Snake_Head);
+	int i = arr[0]- Length/2, j= arr[1]-Width/2;
+	cam_COF = Translate((i+2)*sphere_width, 0, j*sphere_width) * cam_COF;
+	cam_eye = Translate(-(i-2)*sphere_width, 15, j*sphere_width) * cam_eye;
+
 	vec4 a(0, 0, 0, 1);
 	vec4 b(sphere_width, 0, 0, 1);
 	vec4 c(0, 0, sphere_width, 1);
@@ -383,12 +400,10 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'd':
 		direction = turn_left;
 		cam_rotate = -90;
-		cam_move_index = (cam_move_index+1)%4;
 		break;
 	case 'a':
 		direction = turn_right;
 		cam_rotate = 90;
-		cam_move_index = (cam_move_index-1)%4;
 		break;
 	}
 	glutPostRedisplay();
