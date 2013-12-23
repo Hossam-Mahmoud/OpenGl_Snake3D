@@ -30,12 +30,13 @@ void Map::initialize() {
 	error = false;
 	foodEaten = 0;
 
-	snake = queue<int> ();
+	snake = list<int> ();
 	special_timer = -1;
 	special_exist = false;
 	special_x = 0;
 	special_y = 0;
 	generate_map();
+	update_Old_List();
 	if (!error)
 		addFood();
 	else
@@ -89,8 +90,8 @@ void Map::generate_map() {
 		}
 	}
 
-	if (head_count != 1 || tail_count != 1 || (head_count + tail_count
-			+ body_count != MIN_SIZE)) {
+	if (head_count != 1 || tail_count > 1 || (head_count + tail_count
+			+ body_count > MIN_SIZE) || (body_count > tail_count)) {
 		error = true;
 		error_msg
 				= "Snake is not drawn correctly , number of points is not equal to the initial size of the snak or has 0 or more than 1 head or tail";
@@ -99,9 +100,11 @@ void Map::generate_map() {
 
 	//Assuming that the initial size is 3
 	//TODO
-	snake.push(encrypt(tail_x, tail_y));
-	snake.push(encrypt(body_x, body_y));
-	snake.push(encrypt(head_x, head_y));
+	if (tail_count == 1)
+		snake.push_back(encrypt(tail_x, tail_y));
+	if (body_count == 1)
+		snake.push_back(encrypt(body_x, body_y));
+	snake.push_back(encrypt(head_x, head_y));
 
 	//check up
 	check(head_x, head_y, true);
@@ -206,9 +209,11 @@ void Map::update() {
 		return;
 	}
 	// First check if we need to add another part to the snake or not
+	int oldTail = snake.front();
 	int temp = snake.front();//Remove the tail
+	update_Old_List();
 	if (!grow)
-		snake.pop();
+		snake.pop_front();
 	head = decrypt(temp);
 	grid[head[0]][head[1]] = EMPTY;
 	temp = snake.back();//old head
@@ -221,15 +226,20 @@ void Map::update() {
 	head_y = head[1];
 	grid[head[0]][head[1]] = Snake_Head;
 	temp = encrypt(head[0], head[1]);
-	snake.push(temp);
+	snake.push_back(temp);
 	temp = snake.front();//Remove the tail
 	head = decrypt(temp);
 	grid[head[0]][head[1]] = Snake_Tail;
+	grid[head_x][head_y] = Snake_Head;
 	// now check if the next move in any direction/Current Direction is food/special
 	for (temp = 0; temp < 4; temp++) {
 		if (isFood(grid[head_x + delta_x[temp]][head_y + delta_y[temp]])) {
 			temp = 5;
 			eating = true;
+		}
+		if (!grow) {
+			head = decrypt(oldTail);
+			grid[head[0]][head[1]] = EMPTY;
 		}
 	}
 	if (temp == 4)
@@ -326,6 +336,12 @@ void Map::printArray() {
 		cout << "Snake is about to eat" << endl;
 	else
 		cout << "No near food " << endl;
+
+
+	cout<<"Snake : "<<endl;
+	print_List(snake);
+	cout<<"Old Position"<<endl;
+	print_List(snake_old);
 	cout << endl << endl;
 	for (int i = 0; i < Length; i++) {
 		cout << grid[i][0];
@@ -390,6 +406,15 @@ int* Map::foodPosition() {
 		}
 	}
 	return food;
+}
+void Map::update_Old_List()
+{
+	list<int>::iterator iter;
+	snake_old.clear();
+	for(iter=snake.begin();iter!=snake.end();iter++)
+	{
+		snake_old.push_back(*iter);
+	}
 }
 
 /*
