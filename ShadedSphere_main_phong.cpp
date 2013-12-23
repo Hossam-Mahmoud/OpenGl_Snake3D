@@ -17,7 +17,7 @@ const int NumTimesToSubdivide = 5;
 const int NumTriangles = 4096 + 2;  // (4 faces)^(NumTimesToSubdivide + 1)
 const int NumVertices = 3 * NumTriangles;
 
-int animispeed = 5;
+int animispeed = 1;
 
 vec4 points[NumVertices];
 vec3 normals[NumVertices];
@@ -26,9 +26,12 @@ GLuint model_loc, camera_loc, projection_loc, lightPos_loc;
 GLuint vNormal;
 GLuint program;
 //camera parameters
-vec4 cam_eye = vec4(30.0, 10.0, -1, 1.0);
+vec4 cam_eye = vec4(15.0, 10.0, -1, 1.0);
 vec4 cam_upvec = vec4(0.0, 1.0, 0.0, 0.0);
-vec4 cam_COF = vec4(0.0, 0.0, 0.0, 1.0);
+vec4 cam_COF = vec4(0.0, 0.0, -1, 1.0);
+int cam_move_index = 0;
+mat4 cam_moves[4];
+GLfloat cam_rotate = 0;
 //projection parameters
 GLfloat proj_left, proj_right, proj_top, proj_bottom, proj_znear = 1, proj_zfar = 100;
 
@@ -111,20 +114,29 @@ void step(int);
 
 void animate(int val)
 {
-if(trans>=sphere_width)
-{
-	glutPostRedisplay();
-	trans = 0;
-	step(1);
-}
-else
-{
+	if(trans>=sphere_width)
+	{
+		glutPostRedisplay();
+		trans = 0;
+		if(cam_rotate != 0)
+		{
+			cam_COF = RotateY(cam_rotate) * cam_COF;
+			//cam_eye = RotateY(cam_rotate) * cam_eye;
+			cam_rotate = 0;
+		}
+		step(1);
+	}
+	else
+	{
 
-//	std::cout<<trans<<std::endl;
-	trans +=0.01;
-	glutPostRedisplay();
-	glutTimerFunc(animispeed, animate, 1);
-}
+		//	std::cout<<trans<<std::endl;
+		trans +=0.01;
+		cam_COF = cam_moves[cam_move_index] * cam_COF;
+		cam_eye = cam_moves[cam_move_index] * cam_eye;
+
+		glutPostRedisplay();
+		glutTimerFunc(animispeed, animate, 1);
+	}
 
 }
 void step(int integer) {
@@ -133,6 +145,8 @@ void step(int integer) {
 		map.update();
 
 	}
+
+
 
 	int size = map.snake_old.size();
 	int j = map.snake.size()-size;
@@ -178,6 +192,10 @@ void step(int integer) {
 
 void init() {
 
+	cam_moves[0] = Translate(-0.01, 0, 0);
+	cam_moves[1] = Translate(0, 0, -0.01);
+	cam_moves[2] = Translate(0.01, 0, 0);
+	cam_moves[3] = Translate(0, 0, 0.01);
 	map.initialize();
 	vec4 a(0, 0, 0, 1);
 	vec4 b(sphere_width, 0, 0, 1);
@@ -364,9 +382,13 @@ void keyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'd':
 		direction = turn_left;
+		cam_rotate = -90;
+		cam_move_index = (cam_move_index+1)%4;
 		break;
 	case 'a':
 		direction = turn_right;
+		cam_rotate = 90;
+		cam_move_index = (cam_move_index-1)%4;
 		break;
 	}
 	glutPostRedisplay();
