@@ -121,7 +121,7 @@ void animate(int val)
 		if(cam_rotate != 0)
 		{
 			cam_COF = RotateY(cam_rotate) * cam_COF;
-			//cam_eye = RotateY(cam_rotate) * cam_eye;
+			cam_eye = RotateY(cam_rotate) * cam_eye;
 			cam_rotate = 0;
 		}
 		step(1);
