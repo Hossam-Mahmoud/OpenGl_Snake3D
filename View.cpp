@@ -1,9 +1,10 @@
 /*
+
  * View.cpp
  *
  *  Created on: Dec 19, 2013
  *      Author: ALEX-2010
- */
+
 
 #include "Angel.h"
 
@@ -48,6 +49,9 @@ vec4 material_ambient( 1.0, 0.0, 1.0, 1.0 );
 vec4 material_diffuse( 1.0, 0.8, 0.0, 1.0 );
 vec4 material_specular( 1.0, 0.0, 1.0, 1.0 );
 GLfloat  material_shininess = 200.0;
+
+//ball parameters
+GLfloat ball_width =2;
 
 
 
@@ -161,13 +165,35 @@ display( void )
 {
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	cam_COF = vec4( 0.0, 0.0, 0.0, 1.0 );
-	cam_eye = vec4( 0.0, 0.0, 2.0, 1.0 );
+	cam_eye = vec4(2.0, 2.0, 2.0, 1.0 );
 	cam_upvec =  vec4( 0.0, 1.0, 0.0, 0.0 );
 
     mat4 camera = LookAt( cam_eye, cam_COF, cam_upvec);
     glUniformMatrix4fv( camera_loc, 1, GL_TRUE, camera );
 
+    glUniformMatrix4fv(model_loc, 1, GL_TRUE, mat4(1));
+
     glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+
+    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,ball_width));
+
+    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+
+    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,ball_width*2));
+    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+
+    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,ball_width*3));
+    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+
+    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(0,0,-ball_width));
+    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+
+    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(-ball_width,0,0));
+    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+
+    glUniformMatrix4fv(model_loc, 1, GL_TRUE, Translate(ball_width,0,0));
+    glDrawArrays( GL_TRIANGLES, 0, NumVertices );
+
     glutSwapBuffers();
 }
 
@@ -179,7 +205,7 @@ keyboard( unsigned char key, int x, int y )
     case 'i':
     	theta += 5;
     	mat4 model = RotateY(theta);
-    	glUniformMatrix4fv(model_loc, 1, GL_TRUE, model);
+    	//glUniformMatrix4fv(model_loc, 1, GL_TRUE, model);
     	glUniform4fv( lightPos_loc, 1, model*light_position );
     	break;
     }
@@ -237,3 +263,4 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
+*/

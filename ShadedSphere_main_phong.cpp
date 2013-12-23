@@ -158,7 +158,7 @@ void init() {
 	glBindBuffer(GL_ARRAY_BUFFER, buffer[1]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(normals), normals, GL_STATIC_DRAW);
 
-	program = InitShader("vshader.glsl", "fshader.glsl");
+	program = InitShader("src/vshader.glsl", "src/fshader.glsl");
 	glUseProgram(program);
 
 	glBindBuffer(GL_ARRAY_BUFFER, buffer[0]);
