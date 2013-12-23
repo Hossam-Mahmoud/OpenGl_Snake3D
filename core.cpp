@@ -8,9 +8,20 @@
 /*
  *
  */
+
+string separator_line =
+		"********************************************************";
+string tab = "	";
+string files[] = { "level1.txt", "level2.txt", "level3.txt" };
+int delta_x[] = { 0, 0, -1, 1 };
+int delta_y[] = { -1, 1, 0, 0 };
+
+int directions[4][3] = { { DOWN, UP, Left }, { UP, DOWN, Right }, { Left,
+		Right, UP }, { Right, Left, DOWN } };
 void Map::initialize() {
 	//Initialize the Game
 	// set level to 1
+
 	level = 1;
 
 	score = 0;
@@ -27,18 +38,20 @@ void Map::initialize() {
 	generate_map();
 	if (!error)
 		addFood();
+	else
+		cout << "error" << endl;
 }
 int* Map::decrypt(int index) {
 
 	int* result = new int[2];
-	result[0] = index / Length;
-	result[1] = index % Length;
+	result[0] = index / Width;
+	result[1] = index % Width;
 
 	return result;
 }
 
 int Map::encrypt(int x, int y) {
-	return ((x * Length) + y);
+	return ((x * Width) + y);
 }
 
 void Map::generate_map() {
@@ -137,23 +150,9 @@ bool Map::isDead() {
 }
 void Map::move(int direction) {
 	//TODO
-	switch (direction) {
-	case Left:
-		current_direction = Left;
-		break;
-	case Right:
-		current_direction = Right;
-		break;
-	case Periodic:
-		break;
-	case UP:
-		current_direction = UP;
-		break;
-	case DOWN:
-		current_direction = DOWN;
-		break;
-	default:
-		break;
+	if (direction == turn_left || direction == turn_right || direction
+			== Periodic) {
+		current_direction = directions[current_direction][direction];
 	}
 }
 void Map::update() {
@@ -413,52 +412,3 @@ int* Map::foodPosition() {
  return 0;
  }
  */
-//int main(int argc, char **argv) {
-//	Map e;
-//	e.initialize();
-//
-//	cout << tab << "Core Test " << endl;
-//	cout << separator_line << endl;
-//	cout << "Instructions : " << endl;
-//	cout << tab << "Update : 1" << endl;
-//	cout << tab << "Move   : 2" << endl;
-//	cout << tab << "Print  : 3" << endl;
-//	cout << tab << "Exit   : 4" << endl;
-//
-//	int input;
-//	cin >> input;
-//
-//	while (input != 4) {
-//		switch (input) {
-//		case 1:
-//			e.update();
-//			break;
-//		case 2:
-//			cout << tab << tab << "Enter Direction" << endl;
-//			cin >> input;
-//			e.move(input);
-//			break;
-//		case 3:
-//			e.printArray();
-//			break;
-//		case 4:
-//			e.printArray();
-//			return 0;
-//			break;
-//		default:
-//			break;
-//		}
-//
-//		cout << separator_line << endl;
-//		cout << tab << "Core Test " << endl;
-//		cout << separator_line << endl;
-//		cout << "Instructions : " << endl;
-//		cout << tab << "Update : 1" << endl;
-//		cout << tab << "Move   : 2" << endl;
-//		cout << tab << "Print  : 3" << endl;
-//		cout << tab << "Exit   : 4" << endl;
-//		cin >> input;
-//	}
-//
-//	return 0;
-//}
